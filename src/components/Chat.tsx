@@ -2,11 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Client } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
 import Message from './Message';
-
-// Definir global si no está definido
-if (typeof global === 'undefined') {
-  (window as any).global = window;
-}
+import 'globalthis/auto'; // Importar el polyfill
 
 interface ChatMessage {
   sender: string;
@@ -36,9 +32,7 @@ const Chat: React.FC = () => {
     setClient(newClient);
     newClient.activate();
 
-    return () => {
-      newClient.deactivate();
-    };
+    return () => newClient.deactivate();
   }, []);
 
   const handleSendMessage = () => {
