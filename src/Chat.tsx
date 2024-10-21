@@ -18,7 +18,7 @@ const Chat: React.FC<ChatProps> = ({ username }) => {
 
   useEffect(() => {
     const newClient = new Client({
-      brokerURL: 'ws://localhost:8080/ws',
+      brokerURL: 'http://localhost:8080/ws',
       onConnect: () => {
         newClient.subscribe('/topic/public', (message) => {
           if (message.body) {
@@ -37,7 +37,9 @@ const Chat: React.FC<ChatProps> = ({ username }) => {
     setClient(newClient);
     newClient.activate();
 
-    return () => newClient.deactivate();
+    return () => {
+      newClient.deactivate();
+    };
   }, [username]);
 
   const handleSendMessage = () => {
