@@ -3,6 +3,11 @@ import { Client } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
 import Message from './Message';
 
+// Definir global si no está definido
+if (typeof global === 'undefined') {
+  (window as any).global = window;
+}
+
 interface ChatMessage {
   sender: string;
   content: string;
