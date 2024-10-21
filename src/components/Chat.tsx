@@ -1,4 +1,3 @@
-// src/components/Chat.tsx
 import React, { useEffect, useState } from 'react';
 import { Client } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
@@ -11,25 +10,34 @@ interface ChatMessage {
 }
 
 const Chat: React.FC = () => {
-  const [client] = useState(new Client({
-    webSocketFactory: () => new SockJS('http://localhost:8080/ws'),
-    onConnect: () => {
-      console.log('Connected to WebSocket');
-      client.subscribe('/topic/public', (message) => {
-        if (message.body) {
-          const chatMessage: ChatMessage = JSON.parse(message.body);
-          setMessages((prev) => [...prev, chatMessage]);
-        }
-      });
-    },
-  }));
-
+  const [client, setClient] = useState<Client | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [username, setUsername] = useState('');
   const [messageContent, setMessageContent] = useState('');
 
+  useEffect(() => {
+    const newClient = new Client({
+      webSocketFactory: () => new SockJS('http://localhost:8080/ws'),
+      onConnect: () => {
+        console.log('Connected to WebSocket');
+        newClient.subscribe('/topic/public', (message) => {
+          if (message.body) {
+            const chatMessage: ChatMessage = JSON.parse(message.body);
+            setMessages((prev) => [...prev, chatMessage]);
+          }
+        });
+      },
+    });
+    setClient(newClient);
+    newClient.activate();
+
+    return () => {
+      newClient.deactivate();
+    };
+  }, []);
+
   const handleSendMessage = () => {
-    if (messageContent && username) {
+    if (messageContent && username && client) {
       const chatMessage: ChatMessage = {
         sender: username,
         content: messageContent,
@@ -41,7 +49,7 @@ const Chat: React.FC = () => {
   };
 
   const handleAddUser = () => {
-    if (username) {
+    if (username && client) {
       const chatMessage: ChatMessage = {
         sender: username,
         content: '',
@@ -50,11 +58,6 @@ const Chat: React.FC = () => {
       client.publish({ destination: '/app/chat.addUser', body: JSON.stringify(chatMessage) });
     }
   };
-
-  useEffect(() => {
-    client.activate();
-    return () => client.deactivate();
-  }, [client]);
 
   return (
     <div>
